@@ -18,7 +18,7 @@ from pybedtools import BedTool
 from collections import defaultdict
 
 __author__ = 'Xiao-Ou Zhang <xiaoou.zhang@umassmed.edu>'
-__version__ = '1.0.1'
+__version__ = '1.0.0'
 
 
 def overlap(options):
@@ -76,14 +76,14 @@ def overlap(options):
         te_info = '%s\t%d\t%d\t%s\t0\t%s' % (te_chr, te_start, te_end, te_name,
                                              te_strand)
         peak_strand = p[5]
-        if peak_strand == te_strand:
+        if peak_strand == te_strand:  # sense
             if peak_strand == '+':
                 peak_dis = peak_site - te_tss
             else:
                 peak_dis = te_tss - peak_site
             te_info += '\tsense|%d' % peak_dis
             peak_dis = abs(peak_dis)
-        else:
+        else:  # antisense
             if te_start <= peak_site <= te_end:
                 peak_dis = 10000
                 te_info += '\tantisense'

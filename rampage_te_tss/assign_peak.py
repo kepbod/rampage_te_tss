@@ -8,6 +8,7 @@ Options:
     --version                      Show version.
     -a ANNO                        Known gene annotation BED12 file.
     -g ANNO                        Assembled gene annotation BED12 file.
+    -f fraction                    Cutoff of assign fraction. [default: 0.5]
     -p THREAD                      Threads. [default: 10]
 '''
 
@@ -17,9 +18,10 @@ import tempfile
 import re
 from joblib import Parallel, delayed
 from collections import defaultdict
+import shutil
 
 __author__ = 'Xiao-Ou Zhang <xiaoou.zhang@umassmed.edu>'
-__version__ = '0.0.1'
+__version__ = '1.0.0'
 
 
 def assign_peak(options):
@@ -30,6 +32,7 @@ def assign_peak(options):
     known_anno_f = options['-a']
     anno_f = options['-g']
     te_peak = os.path.join(options['<rampagedir>'], 'rampage_TE.txt')
+    fraction_cutoff = float(options['-f'])
     threads = int(options['-p'])
     # construct known gene info
     known_anno_set = set()
@@ -46,16 +49,18 @@ def assign_peak(options):
     with open(te_peak, 'r') as f:
         result = Parallel(n_jobs=threads)(delayed(assign)(line.rstrip(),
                                                           known_anno_f,
-                                                          novel_anno_f)
+                                                          novel_anno_f,
+                                                          fraction_cutoff)
                                           for line in f)
     outfile = os.path.join(options['<rampagedir>'], 'rampage_TE_gene.txt')
     with open(outfile, 'w') as out:
         for r in result:
             if r is not None:
                 out.write(r)
+    shutil.rmtree(temp_dir)
 
 
-def assign(peak_info, known_anno_f, novel_anno_f):
+def assign(peak_info, known_anno_f, novel_anno_f, fraction_cutoff):
     known_anno = BedTool(known_anno_f).sort()
     novel_anno = BedTool(novel_anno_f).sort()
     items = peak_info.split()
@@ -79,59 +84,50 @@ def assign(peak_info, known_anno_f, novel_anno_f):
             for i in range(n):
                 f.write(info_str % (chrom, a, b, strand))
     peak = BedTool(peak_f)
-    known_ratio, known_dis, known_gene = overlap_bed(peak, known_anno, 'known',
-                                                     peak_site, peak_info,
-                                                     total)
-    novel_ratio, novel_dis, novel_gene = overlap_bed(peak, novel_anno, 'novel',
-                                                     peak_site, peak_info,
-                                                     total)
-    if known_ratio > novel_ratio:
-        return known_gene
-    elif known_ratio < novel_ratio:
-        return novel_gene
-    else:
-        return known_gene if known_dis < novel_dis else novel_gene
+    peak_gene = overlap_bed(peak, known_anno, novel_anno, peak_site,
+                            peak_info, total, fraction_cutoff)
+    shutil.rmtree(temp_dir)
+    return peak_gene
 
 
-def overlap_bed(peak, anno, flag, peak_site, peak_info, total):
+def overlap_bed(peak, k_anno, n_anno, peak_site, peak_info, total, cutoff):
     isoform = defaultdict(int)
     tss_dis = {}
     abs_tss_dis = {}
-    for o in peak.intersect(anno, wa=True, wb=True, s=True, split=True):
-        iso_info = '\t'.join(o[6:])
-        isoform[iso_info] += 1
-        if iso_info in tss_dis:
-            continue
-        strand = o[11]
-        if strand == '+':
-            dis = peak_site - int(o[7])
-        else:
-            dis = int(o[8]) - peak_site
-        tss_dis[iso_info] = dis
-        abs_dis = abs(dis)
-        abs_tss_dis[iso_info] = abs_dis
-    peak_gene = ''
-    max_ratio = 0
+    for anno, tag in zip((k_anno, n_anno), ('known', 'novel')):
+        for o in peak.intersect(anno, wa=True, wb=True, s=True, split=True):
+            iso_info = '\t'.join(o[6:] + [tag])
+            isoform[iso_info] += 1
+            if iso_info in tss_dis:
+                continue
+            strand = o[11]
+            if strand == '+':
+                dis = peak_site - int(o[7])
+            else:
+                dis = int(o[8]) - peak_site
+            tss_dis[iso_info] = dis
+            abs_dis = abs(dis)
+            abs_tss_dis[iso_info] = abs_dis
     min_dis = None
+    max_fraction = 0
+    peak_gene = None
     for iso in isoform:
-        ratio = isoform[iso] * 1.0 / total
+        fraction = isoform[iso] * 1.0 / total
         abs_dis = abs_tss_dis[iso]
         dis = tss_dis[iso]
-        gene_info = '%s\t%s\t%s\t%d\t%f\n' % (peak_info, iso, flag, dis,
-                                              ratio)
-        if ratio == max_ratio:  # same ratio
-            if abs_dis < min_dis:  # shorter distance
-                max_ratio = ratio
-                min_dis = abs_dis
-                peak_gene = gene_info
-        elif ratio > max_ratio:  # more ratio
-            max_ratio = ratio
+        gene_info = '%s\t%s\t%d\t%f\n' % (peak_info, iso, dis,
+                                          fraction)
+        if fraction < cutoff:  # not pass fraction cutoff
+            continue
+        if min_dis is None or abs_dis < min_dis:  # new minimum distance
             min_dis = abs_dis
+            max_fraction = fraction
             peak_gene = gene_info
-    if peak_gene:
-        return max_ratio, min_dis, peak_gene
-    else:
-        return None, None, None
+        elif abs_dis == min_dis and fraction > max_fraction:  # same distance
+            min_dis = abs_dis
+            max_fraction = fraction
+            peak_gene = gene_info
+    return peak_gene
 
 
 def filter_bed(bed, anno):
