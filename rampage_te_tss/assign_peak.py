@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-Usage: assign_peak.py [options] -a ANNO -g GTF <rampagedir>
+Usage: assign_peak.py [options] -a ANNO -g ANNO <rampagedir>
 
 Options:
     -h --help                      Show help message.
