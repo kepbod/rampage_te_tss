@@ -9,7 +9,7 @@ Options:
     -l LENGTH                      Feature length for F-seq. [default: 30]
     --wig                          Create Wig files.
     -p PERCENT                     Retained percent of reads in resized peaks.
-                                   [default: 0.95]
+                                   [default: 0.7]
 '''
 
 import sys
