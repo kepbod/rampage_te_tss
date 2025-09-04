@@ -8,7 +8,7 @@ Options:
     --version                      Show version.
     -a ANNO                        Known gene annotation BED12 file.
     -g ANNO                        Assembled gene annotation BED12 file.
-    -f fraction                    Cutoff of assign fraction. [default: 0.5]
+    -f fraction                    Cutoff of assignment fraction. [default: 0.5]
     -p THREAD                      Threads. [default: 10]
 '''
 

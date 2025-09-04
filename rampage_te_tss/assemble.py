@@ -42,7 +42,7 @@ def assemble(options):
     if len(bamf) == 1:  # no replicates
         # run StringTie
         out_gtf = run_stringtie(bamf[0], gtf, dir_path, thread)
-        # convert GTF to GenePred
+        # convert GTF to BED 12 
         convert_gtf(out_gtf, dir_path, prefix)
     else:  # have replicates
         # run StringTie
@@ -51,7 +51,7 @@ def assemble(options):
             gtf_list.append(run_stringtie(f, gtf, dir_path, thread))
         out_gtf = merge_stringtie(gtf_list, gtf, dir_path, prefix,
                                   thread)
-        # convert GTF to GenePred
+        # convert GTF to BED 12 
         convert_gtf(out_gtf, dir_path, prefix)
 
 
