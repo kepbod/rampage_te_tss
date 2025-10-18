@@ -54,7 +54,7 @@ Note:
 Example: 
 
 ```
-rm_pcr.py -o rampage_peak --uniq rampage_rep1.bam rampage_rep2.bam
+rm_pcr.py -o rampage_TETSS_peak --uniq rampage_rep1.bam rampage_rep2.bam
 ```
 
 ### Step 2:
@@ -88,7 +88,7 @@ Format of `rampage_peaks.txt`:
 | Strand      | Strand of peak                |
 | Peak        | peak site                     |
 | Height      | Height of peak site           |
-| Peak reads  | Reads of (peak site ± 2 bp)   |
+| Peak_reads  | Reads of (peak site ± 2 bp)   |
 | Total       | Total reads of peak region    |
 | Start_Fseq  | Start of F-seq peak region    |
 | End_Fseq    | End of F-seq peak region      |
@@ -103,7 +103,7 @@ Note:
 Example: 
 
 ```
-call_peak.py rampage_peak
+call_peak.py rampage_TETSS_peak
 ```
 
 ### Step 3:
@@ -131,8 +131,8 @@ The additional three columns are listed below:
 | Field       | Description                   |
 | :---------: | :---------------------------- |
 | Entropy     | Entropy of RAMPAGE peak       |
-| Positions of 3' ends | 3' ends of read pairs in the peak| 
-|Read counts of each 3' end|Read counts of each 3' end  in the peak| 
+| Positions_of_3'_ends | 3' ends of read pairs in the peak| 
+|Read_counts_of_each_3'_end|Read counts of each 3' end  in the peak| 
 
 Note:
 
@@ -141,7 +141,7 @@ Note:
 Example: 
 
 ```
-entropy.py rampage_peak
+entropy.py rampage_TETSS_peak
 ```
 
 ### Step 4:
@@ -227,7 +227,7 @@ Note:
 Example: 
 
 ```
-overlap_te.py -t te.bed rampage_peak
+overlap_te.py -t te.bed rampage_TETSS_peak
 ```
 
 ### Step 6:
@@ -269,9 +269,9 @@ The additional fifteen columns are listed below:
 | CDS start   | CDS start of transcript       |
 | CDS end     | CDS end of transcript         |
 | Score       | 0                             |
-| Exon counts | Exon counts of transcript     |
-| Exon sizes  | Exon sizes of transcript      |
-| Exon offsets| Exon offsets of transcript    |
+| Exon_counts | Exon counts of transcript     |
+| Exon_sizes  | Exon sizes of transcript      |
+| Exon_offsets| Exon offsets of transcript    |
 | Annotation  | known or novel                |
 | Distance    | Distance to gene annotaion    |
 | Fraction    | Assignment fraction           |
@@ -285,11 +285,8 @@ Note:
 Example: 
 
 ```
-assign_peak.py -a gene_annotation.bed -g merged_stringtie.bed rampage_peak
+assign_peak.py -a gene_annotation.bed -g merged_stringtie.bed rampage_TETSS_peak
 ```
-
-## Citation
-
 
 ## License
 
