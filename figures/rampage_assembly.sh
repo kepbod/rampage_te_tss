@@ -1,0 +1,4 @@
+for i in *stringtie.bed;do perl -alne 'if($F[5] eq "+"){$a=$F[1];$b=$F[1]+1}else{$a=$F[2]-1;$b=$F[2]};print "$F[0]\t$a\t$b\t$F[3]\t0\t$F[5]\t$_"' $i >! ${i/stringtie.bed/stringtie_TSS.bed};done
+for i in *stringtie_TSS.bed;do n=${i/_rampage.stringtie_TSS.bed/};bedtools intersect -a ../TE_genes/${n}_rampage_TE_gene_all_labeled.txt -b $i -wao -s|perl -alne '$F[38]=$F[38]ne"other"?"all":$F[38];$"="\t";$l=$F[47]-$F[46];print "@F[0..2]\t$F[38]\t$l\t$F[54]" if $F[40] != -1';done >! rampage_assembly_info.txt
+for i in *stringtie_TSS.bed;do n=${i/_rampage.stringtie_TSS.bed/};bedtools intersect -a ../TE_genes/high_confidence/${n}_rampage_TE_gene_high.txt -b $i -wao -s|perl -alne '$"="\t";$l=$F[46]-$F[45];print "@F[0..2]\thigh\t$l\t$F[53]" if $F[39] != -1';done >> rampage_assembly_info.txt
+perl -alne '$"="\t";$a{"@F[0..2,4,5]"}=$F[3];END{print "$_\t$a{$_}" for keys %a}' rampage_assembly_info.txt >! rampage_assembly_info_new.txt
